@@ -1,10 +1,13 @@
 # gui.py（プログレスバー付き）
 import tkinter as tk
 from tkinter import scrolledtext, messagebox, ttk
-from img_uploader import remote_file_exists, upload_directory
+from img_uploader import remote_file_exists, get_remote_file_names, upload_directory
 import json
 import os
 from ftplib import FTP_TLS
+from logger import get_logger
+
+logger = get_logger(__name__)
 
 class UploadGUI:
     def __init__(self, master):
@@ -38,6 +41,11 @@ class UploadGUI:
         self.file_vars = {}
         self.file_list = []
         self.selected_files = []
+        # 取得済みディレクトリパス
+        self.checked_remote_path = ""
+        self.getting_remote_files = []
+
+
 
     def load_settings(self):
         if os.path.exists("settings.json"):
@@ -76,12 +84,15 @@ class UploadGUI:
         ftps.prot_p()
 
         self.file_list.clear()
+        logger.info("ローカルファイル一覧取得")
         for root, dirs, files in os.walk(local_base):
             rel_path = os.path.relpath(root, local_base)
+            logger.debug(f"root : {root} dirs : {dirs} files : {files}")
             for file in files:
                 local_file = os.path.join(root, file)
                 remote_file = os.path.join(remote_base, rel_path, file).replace("\\", "/")
                 self.file_list.append((local_file, remote_file))
+                logger.debug(f"   file_list append info {(local_file, remote_file)}")
 
         if not self.file_list:
             messagebox.showinfo("Info", "アップロード対象ファイルがありません")
@@ -138,6 +149,9 @@ class UploadGUI:
         canvas.create_window((0,0), window=scroll_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
 
+        self.checked_remote_path = ""
+        self.getting_remote_files.clear()
+
         # ---------------------------
         # チェックボックス生成（非同期風に after() で更新）
         # ---------------------------
@@ -154,10 +168,17 @@ class UploadGUI:
                 return
 
             local_file, remote_file = self.file_list[idx]
-            try:
-                exists = remote_file_exists(ftps, remote_file)
-            except Exception:
-                exists = False
+            logger.debug(f"チェック対象ファイルフルパス : {remote_file}")
+
+            directory , filename = os.path.split(remote_file)
+            if self.checked_remote_path == "" or self.checked_remote_path != directory:
+                logger.debug(f"リモート先ファイル一覧取得")
+                self.checked_remote_path = directory
+                self.getting_remote_files = get_remote_file_names(ftps, remote_file)
+
+            # 
+            exists = filename in self.getting_remote_files
+
             var = tk.BooleanVar(value=not exists)
             chk_text = f"{local_file}" + (" (既存)" if exists else "")
             chk = tk.Checkbutton(scroll_frame, text=chk_text, variable=var, anchor="w", justify="left")

@@ -1,12 +1,15 @@
 import tkinter as tk
 from gui import UploadGUI
+from logger import get_logger
+
+logger = get_logger(__name__)
 
 def main():
-    print("Starting GUI...")  # コンソール確認用
+    logger.info("Starting GUI...")
     root = tk.Tk()
     app = UploadGUI(root)
     root.mainloop()
-    print("GUI closed.")       # GUI終了確認
+    logger.info("GUI closed.")
 
 if __name__ == "__main__":
     main()

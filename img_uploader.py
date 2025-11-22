@@ -1,21 +1,19 @@
 # img_uploader.py
 import os
 from ftplib import FTP_TLS
+from logger import get_logger
 
+logger = get_logger(__name__)
 # -----------------------
-# リモートファイルが存在するか確認
+# 指定されたディレクトリのリモートファイル一覧を取得
 # -----------------------
-def remote_file_exists(ftps: FTP_TLS, remote_path: str) -> bool:
-    """
-    指定のリモートファイルが存在するか確認
-    """
-    directory, filename = os.path.split(remote_path)
-    try:
-        ftps.cwd(directory)
-        files = ftps.nlst()
-        return filename in files
-    except Exception:
-        return False
+def get_remote_file_names(ftps: FTP_TLS, remote_path: str) -> list[str]:
+    directory, _ = os.path.split(remote_path)
+    ftps.cwd(directory)  # ディレクトリが存在しなければ ftplib.error_perm などが発生
+    files = ftps.nlst()
+    logger.debug(f"対象ディレクトリ： {directory}")
+    logger.debug(f"ファイル一覧： {files}")
+    return files
 
 # -----------------------
 # ファイルをアップロード
