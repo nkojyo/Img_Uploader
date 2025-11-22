@@ -1,7 +1,7 @@
 # gui.py（プログレスバー付き）
 import tkinter as tk
 from tkinter import scrolledtext, messagebox, ttk
-from img_uploader import remote_file_exists, get_remote_file_names, upload_directory
+from img_uploader import get_remote_file_names, upload_directory
 import json
 import os
 from ftplib import FTP_TLS
