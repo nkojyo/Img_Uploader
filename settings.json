@@ -1,8 +1,0 @@
-{
-  "host": "sv14108.xserver.jp",
-  "port": 21,
-  "user": "dev_jsheart@jsheart.xsrv.jp",
-  "password": "joyfull0731",
-  "remote_base": "/common",
-  "local_base": "common"
-}
